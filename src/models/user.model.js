@@ -16,7 +16,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
+      lowecase: true,
       trim: true,
     },
     fullName: {
@@ -26,34 +26,43 @@ const userSchema = new Schema(
       index: true,
     },
     avatar: {
-      type: String, //cloudinary url
+      type: String, // cloudinary url
       required: true,
     },
     coverImage: {
-      type: string, // cloudinary url
+      type: String, // cloudinary url
     },
-    watchHistory: [{ type: Schema.Types.ObjectId, ref: "Video" }],
+    watchHistory: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
     password: {
-      type: string,
-      required: [true, "Password is required."],
+      type: String,
+      required: [true, "Password is required"],
     },
-
-    refreshToken: { type: String },
+    refreshToken: {
+      type: String,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
+
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare("password", this.password);
+  return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken = function (password) {
+userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -62,17 +71,20 @@ userSchema.methods.generateAccessToken = function (password) {
       fullName: this.fullName,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
   );
 };
-
-userSchema.methods.generateRefreshToken = function (password) {
+userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this._id,
     },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
   );
 };
 
